@@ -1,0 +1,616 @@
+/**
+ * ST. MARY MEMORIAL HOSPITAL - COMMAND CENTER CORE ENGINE
+ * Relational State Synchronization & Financial Ledger Engine
+ */
+
+const ADMIN_SECURE_PIN = "0000";
+let currentAuthType = null;
+let currentAuthenticatedDoctorId = null;
+
+// ==========================================
+// DB CORE STORAGE CONTROLLERS
+// ==========================================
+function getDB(key) {
+    const raw = localStorage.getItem(key);
+    if (!raw) return [];
+    try { 
+        return JSON.parse(raw) || []; 
+    } catch (e) { 
+        console.error("Database read violation.", e);
+        return []; 
+    }
+}
+
+function saveDB(key, arrayData) {
+    localStorage.setItem(key, JSON.stringify(arrayData));
+}
+
+function verifyDatabaseStateIntegrity() {
+    if (!localStorage.getItem("patients")) {
+        saveDB("patients", []);
+    }
+    if (!localStorage.getItem("cash_ledger")) {
+        // Seed initial floating capital balance
+        saveDB("cash_ledger", [{ type: "In", amount: 25000.00, note: "Initial Treasury Floating Capital Base", date: new Date().toLocaleDateString() }]);
+    }
+    if (!localStorage.getItem("doctors") || getDB("doctors").length === 0) {
+        const initialStaff = [
+            { id: "DOC-101", name: "Dr. Abraham", specialty: "Cardiology", pin: "1111", status: "Active" },
+            { id: "DOC-102", name: "Dr. Bethlehem", specialty: "Orthopedics", pin: "2222", status: "Active" },
+            { id: "DOC-103", name: "Dr. Caleb", specialty: "General Medicine", pin: "3333", status: "Active" },
+            { id: "DOC-104", name: "Dr. Danait", specialty: "Pediatrics", pin: "4444", status: "Active" }
+        ];
+        saveDB("doctors", initialStaff);
+    }
+}
+
+// Global Lifecycle Bootstrapper
+document.addEventListener("DOMContentLoaded", () => {
+    verifyDatabaseStateIntegrity();
+    refreshGlobalCapacityVisualizers();
+    switchView('home-view');
+
+    document.getElementById("advanced-intake-form").addEventListener("submit", processIntakeSubmission);
+    document.getElementById("admin-doc-onboard-form").addEventListener("submit", processDoctorOnboardingAction);
+    document.getElementById("cash-regulation-form").addEventListener("submit", processManualCashTransaction);
+
+    // Global Key Listener for Enter Key Form Submissions
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            const activeView = document.querySelector(".view:not(.hidden)");
+            if (!activeView) return;
+
+            if (activeView.id === "auth-view") {
+                e.preventDefault();
+                validateGatewayCredentials();
+            }
+        }
+    });
+});
+
+// ==========================================
+// VIEW ROUTER MATRIX
+// ==========================================
+function switchView(viewId) {
+    document.querySelectorAll(".view").forEach(el => el.classList.add("hidden"));
+    document.getElementById(viewId).classList.remove("hidden");
+    
+    if (viewId === 'admin-view') renderAdminDashboardLedgers();
+    if (viewId === 'doctor-view') renderPhysicianWorkspaceQueue();
+    
+    refreshGlobalCapacityVisualizers();
+}
+
+function clearIntakeForm() {
+    document.getElementById("advanced-intake-form").reset();
+}
+
+function refreshGlobalCapacityVisualizers() {
+    const patients = getDB("patients");
+    const activeInpatients = patients.filter(p => !p.discharged).length;
+    const MAX_WARDS = 50; // Increased ward count limit
+    
+    const countLabel = document.getElementById("bed-count-label");
+    if (countLabel) {
+        countLabel.innerText = `${activeInpatients} / ${MAX_WARDS} Wards Occupied`;
+    }
+    const pct = Math.min((activeInpatients / MAX_WARDS) * 100, 100);
+    const bar = document.getElementById("bed-progress-fill");
+    if (bar) bar.style.width = `${pct}%`;
+}
+
+// Dynamic Room Allocation Matrix
+function getDepartmentRoom(department) {
+    const roomMapping = {
+        "Cardiology": "Tower A - Room 302 (Cardio-Cath Suite)",
+        "Orthopedics": "Tower B - Room 115 (Skeletal Trauma Bay)",
+        "Pediatrics": "West Wing - Room 204 (Pediatric Care Zone)",
+        "General Medicine": "Main Pavilion - Room 108 (Standard Intake Ward)"
+    };
+    return roomMapping[department] || "General Triage Zone Box-C";
+}
+
+// ==========================================
+// CLINICAL INTAKE ROUTING ENGINE
+// ==========================================
+function processIntakeSubmission(e) {
+    e.preventDefault();
+
+    const name = document.getElementById("pt-name").value.trim();
+    const relation = document.getElementById("pt-relation").value;
+    const age = parseInt(document.getElementById("pt-age").value);
+    const sex = document.getElementById("pt-gender").value;
+    const phone = document.getElementById("pt-phone").value;
+    const symptom = document.getElementById("pt-symptom").value;
+    const duration = document.getElementById("pt-duration").value;
+    const allergies = document.getElementById("pt-allergies").value.trim() || "No Known Drug Allergies (NKDA)";
+    const chronic = document.getElementById("pt-chronic").value;
+    const bp = document.getElementById("pt-bp").value;
+    const triage = document.getElementById("pt-triage").value;
+
+    const patients = getDB("patients");
+    const doctors = getDB("doctors");
+
+    let targetSpecialty = "General Medicine";
+    if (symptom === "Chest Pain") targetSpecialty = "Cardiology";
+    else if (symptom === "Fracture") targetSpecialty = "Orthopedics";
+    else if (symptom === "Pediatric Illness" || age <= 12) targetSpecialty = "Pediatrics";
+
+    let assignedDoc = doctors.find(d => d.specialty === targetSpecialty && d.status === "Active");
+    if (!assignedDoc) {
+        assignedDoc = doctors.find(d => d.status === "Active") || doctors[0];
+    }
+
+    const trackingId = `PT-${1001 + patients.length}`;
+
+    const record = {
+        id: trackingId,
+        name: name,
+        relationContext: relation,
+        age: age,
+        biologicalSex: sex,
+        contactPhone: phone,
+        presentingSymptom: symptom,
+        symptomDuration: duration,
+        declaredAllergies: allergies,
+        comorbiditiesHistory: chronic,
+        bloodPressureTrend: bp,
+        triageSeverityIndex: triage,
+        assignedConsultantName: assignedDoc ? assignedDoc.name : "Emergency Pool Specialist",
+        assignedConsultantId: assignedDoc ? assignedDoc.id : "DOC-103",
+        routedDepartment: assignedDoc ? assignedDoc.specialty : "General Medicine",
+        allocatedRoom: getDepartmentRoom(targetSpecialty),
+        clinicalInterventionsHistory: ["Initial triage routing verified. Awaiting evaluation parameters."],
+        financialAccountBalance: 150.00, // Accumulated accrued processing bill
+        discharged: false
+    };
+
+    patients.push(record);
+    saveDB("patients", patients);
+
+    document.getElementById("advanced-intake-form").reset();
+    refreshGlobalCapacityVisualizers();
+
+    alert(`HEALTH RECORD COMPILED\nFile Tracking Key: ${trackingId}\nAssigned Room: ${record.allocatedRoom}`);
+}
+
+function executePatientSearch() {
+    const queryId = document.getElementById("pt-search-input").value.trim().toUpperCase();
+    const patients = getDB("patients");
+    const err = document.getElementById("pt-search-error");
+
+    const match = patients.find(p => p.id === queryId);
+    if (!match) {
+        err.innerText = "Tracking token mismatch: File match not found.";
+        return;
+    }
+
+    err.innerText = "";
+    const box = document.getElementById("patient-profile-data");
+    box.innerHTML = `
+        <div class="profile-dashboard-grid card">
+            <div>
+                <span class="file-tag-badge">SECURE EMR RECORD DISCOVERY</span>
+                <h3 style="font-size:1.8rem; margin:10px 0;">${match.name}</h3>
+                <p>File Key: <strong>${match.id}</strong> | Age: ${match.age} | Sex: ${match.biologicalSex}</p>
+                <p>Chief Complaint: <strong>${match.presentingSymptom}</strong></p>
+                <p>Allergy Profiling: <strong style="color:var(--triage-red);">${match.declaredAllergies}</strong></p>
+                <p>Primary Comms Line: ${match.contactPhone}</p>
+                
+                <div class="routing-alert-box" style="margin-top:20px; padding:15px; background:var(--accent-blue-light); border-left:4px solid var(--accent-blue); border-radius:6px;">
+                    <h4 style="margin:0 0 5px 0; color:var(--primary-color);">📍 Direction & Logistics Information</h4>
+                    <p style="margin:3px 0;">Assigned Care Specialist: <strong>${match.assignedConsultantName} (${match.routedDepartment})</strong></p>
+                    <p style="margin:3px 0;">Target Directional Location: <strong style="color:var(--accent-blue);">${match.allocatedRoom}</strong></p>
+                </div>
+            </div>
+            <div style="border-left:1px solid var(--border-clinical); padding-left:30px;">
+                <p>Triage Severity Class: <span class="badge tag-${match.triageSeverityIndex}">${match.triageSeverityIndex} Priority Flag</span></p>
+                
+                <div class="financial-invoice-box" style="margin:20px 0; padding:15px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px;">
+                    <span style="font-size:0.75rem; font-weight:700; color:#16a34a; uppercase;">CURRENT ACCOUNT STATS</span>
+                    <h3 style="margin:5px 0; font-size:1.6rem; color:#14532d;">$${match.financialAccountBalance.toFixed(2)}</h3>
+                    <p style="margin:0; font-size:0.8rem; color:#166534;">${match.discharged ? "🚨 Invoice Paid & Settled (Discharged)" : "⏳ Pending Settlement on Discharge"}</p>
+                </div>
+
+                <div style="padding:12px; background:var(--bg-workspace); border-radius:6px;">
+                    <strong>Active Clinical Timeline:</strong>
+                    <p style="font-family:monospace; margin:5px 0 0 0; font-size:0.8rem; line-height:1.5;">• ${match.clinicalInterventionsHistory.join("<br>• ")}</p>
+                </div>
+            </div>
+        </div>
+    `;
+    switchView("patient-view");
+}
+
+// ==========================================
+// SECURITY ACCESS GATEWAY SYSTEMS
+// ==========================================
+function openGateway(type) {
+    currentAuthType = type;
+    const block = document.getElementById("auth-selector-block");
+    block.innerHTML = "";
+    document.getElementById("auth-pin").value = "";
+    document.getElementById("auth-global-error").innerText = "";
+
+    if (type === 'admin') {
+        document.getElementById("auth-icon").innerText = "🛠️";
+        document.getElementById("auth-title").innerText = "Executive Administration Gate";
+        document.getElementById("auth-subtitle").innerText = "Enter root administrative master key signature. Default: 0000";
+    } else {
+        document.getElementById("auth-icon").innerText = "🩺";
+        document.getElementById("auth-title").innerText = "Physician Diagnostics Portal";
+        document.getElementById("auth-subtitle").innerText = "Verify credentials profile configuration details below.";
+        
+        const doctors = getDB("doctors");
+        let selectHtml = `<label>Select Your Practitioner Profile</label>
+                          <select id="auth-doc-id-select">`;
+        doctors.forEach(d => {
+            selectHtml += `<option value="${d.id}">${d.name} — [${d.specialty}] (${d.status})</option>`;
+        });
+        selectHtml += `</select>`;
+        block.innerHTML = selectHtml;
+    }
+    switchView("auth-view");
+}
+
+function validateGatewayCredentials() {
+    const pin = document.getElementById("auth-pin").value.trim();
+    const err = document.getElementById("auth-global-error");
+    err.innerText = "";
+
+    if (!pin) {
+        err.innerText = "Entry Required: Please insert access authorization passcode.";
+        return;
+    }
+
+    if (currentAuthType === 'admin') {
+        if (pin === ADMIN_SECURE_PIN) {
+            switchView("admin-view");
+        } else {
+            err.innerText = "Access Violation: Authentication signature rejected.";
+        }
+    } else {
+        const selectElement = document.getElementById("auth-doc-id-select");
+        if (!selectElement) return;
+        
+        const docId = selectElement.value;
+        const doctors = getDB("doctors");
+        const match = doctors.find(d => d.id === docId);
+
+        if (match) {
+            if (match.status !== "Active") {
+                err.innerText = `Access Denied: Profile lifecycle code is currently [${match.status}].`;
+                return;
+            }
+            if (String(match.pin).trim() === String(pin)) {
+                currentAuthenticatedDoctorId = match.id;
+                switchView("doctor-view");
+            } else {
+                err.innerText = "Access Violation: Private portal token match failed.";
+            }
+        }
+    }
+}
+
+function executeDoctorPINMutation() {
+    const currentPinInput = prompt("Verify current security PIN code signature:");
+    if (currentPinInput === null) return;
+
+    const doctors = getDB("doctors");
+    const idx = doctors.findIndex(d => d.id === currentAuthenticatedDoctorId);
+
+    if (idx !== -1) {
+        if (String(doctors[idx].pin).trim() !== String(currentPinInput).trim()) {
+            alert("Verification Failed: Input token matching signature mismatch.");
+            return;
+        }
+
+        const newPin = prompt("Establish new secure 4-digit token access PIN:");
+        if (newPin === null) return;
+
+        if (newPin.trim().length !== 4 || isNaN(newPin)) {
+            alert("Configuration Aborted: Passcode must be exactly 4 digits.");
+            return;
+        }
+
+        doctors[idx].pin = newPin.trim();
+        saveDB("doctors", doctors);
+        
+        document.getElementById("doc-ui-pin").innerText = doctors[idx].pin;
+        alert("Security Configuration Updated successfully.");
+    }
+}
+
+// ==========================================
+// REGULATED TREASURY & LIQUID ASSET MATRIX
+// ==========================================
+function processManualCashTransaction(e) {
+    e.preventDefault();
+    const type = document.getElementById("cash-type").value;
+    const amount = parseFloat(document.getElementById("cash-amount").value);
+    const note = document.getElementById("cash-note").value.trim() || "Manual Regulatory Adjustment";
+
+    if (isNaN(amount) || amount <= 0) {
+        alert("Please specify a valid monetary amount.");
+        return;
+    }
+
+    const cashLedger = getDB("cash_ledger");
+    cashLedger.push({
+        type: type,
+        amount: amount,
+        note: note,
+        date: new Date().toLocaleDateString()
+    });
+    saveDB("cash_ledger", cashLedger);
+
+    document.getElementById("cash-regulation-form").reset();
+    renderAdminDashboardLedgers();
+    alert("Transaction logged directly to hospital cash flow matrix.");
+}
+
+function triggerPayrollPayout() {
+    const doctors = getDB("doctors");
+    const patients = getDB("patients");
+    const cashLedger = getDB("cash_ledger");
+
+    let calculatedPayrollOverhead = 0;
+    doctors.forEach(d => {
+        const cases = patients.filter(p => p.assignedConsultantId === d.id).length;
+        calculatedPayrollOverhead += 8500.00 + (cases * 250.00);
+    });
+
+    cashLedger.push({
+        type: "Out",
+        amount: calculatedPayrollOverhead,
+        note: "Disbursed Realized Live Staff Payroll Liabilities Asset Cycle",
+        date: new Date().toLocaleDateString()
+    });
+    
+    saveDB("cash_ledger", cashLedger);
+    renderAdminDashboardLedgers();
+    alert(`System Asset Disbursement Confirmed:\n$${calculatedPayrollOverhead.toFixed(2)} parsed out of reserve vaults.`);
+}
+
+function renderAdminDashboardLedgers() {
+    const doctors = getDB("doctors");
+    const patients = getDB("patients");
+    const cashLedger = getDB("cash_ledger");
+
+    // Realized Gross Revenue is strictly computed from realized, discharged entries
+    let totalGrossFacilityRevenue = 0;
+    patients.forEach(p => { 
+        if (p.discharged) {
+            totalGrossFacilityRevenue += p.financialAccountBalance; 
+        }
+    });
+
+    let totalAccruedOverheadLiabilities = 0;
+    doctors.forEach(d => {
+        const cases = patients.filter(p => p.assignedConsultantId === d.id).length;
+        totalAccruedOverheadLiabilities += 8500.00 + (cases * 250.00);
+    });
+
+    // Compute central vault cache via manual cash regulations + realized dynamic intake balances
+    let totalCashIn = 0;
+    let totalCashOut = 0;
+    cashLedger.forEach(item => {
+        if (item.type === "In") totalCashIn += item.amount;
+        if (item.type === "Out") totalCashOut += item.amount;
+    });
+
+    const netTreasuryLiquidity = (totalCashIn + totalGrossFacilityRevenue) - totalCashOut;
+
+    document.getElementById("t-revenue").innerText = `$${totalGrossFacilityRevenue.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+    document.getElementById("t-payroll").innerText = `$${totalAccruedOverheadLiabilities.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+    
+    const reserveField = document.getElementById("t-net-reserve");
+    reserveField.innerText = `$${netTreasuryLiquidity.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+    reserveField.className = netTreasuryLiquidity >= 0 ? "text-green" : "text-orange";
+
+    // Rebuild Personnel Directory Rows
+    const dBody = document.getElementById("admin-docs-table-body");
+    dBody.innerHTML = "";
+    doctors.forEach(d => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td><code>${d.id}</code></td>
+            <td><strong>${d.name}</strong></td>
+            <td>${d.specialty}</td>
+            <td><code class="admin-pin-view-tag">🔑 ${d.pin}</code></td>
+            <td><span class="status-indicator-tag status-${d.status.toLowerCase().replace(" ", "")}">${d.status}</span></td>
+            <td class="no-print">
+                <select onchange="updateDoctorLifecycleStatus('${d.id}', this.value)" class="lifecycle-select">
+                    <option value="">-- Modify Status --</option>
+                    <option value="Active">🟢 Active</option>
+                    <option value="Suspended">💡 Suspend</option>
+                    <option value="Fired">❌ Terminate Entry</option>
+                </select>
+            </td>
+        `;
+        dBody.appendChild(tr);
+    });
+
+    // Populate Patient Audit Matrix Rows
+    const pBody = document.getElementById("admin-patients-table-body");
+    pBody.innerHTML = "";
+    patients.forEach(p => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td><code>${p.id}</code></td>
+            <td><strong>${p.name}</strong></td>
+            <td><small>Symptom: ${p.presentingSymptom}<br>Room: ${p.allocatedRoom}</small></td>
+            <td><span class="badge tag-${p.triageSeverityIndex}">${p.triageSeverityIndex}</span></td>
+            <td>${p.routedDepartment}</td>
+            <td><span class="badge ${p.discharged ? 'tag-Green' : 'tag-Yellow'}">${p.discharged ? 'Discharged' : 'Admitted'}</span></td>
+            <td><strong class="text-green">$${p.financialAccountBalance.toFixed(2)}</strong></td>
+        `;
+        pBody.appendChild(tr);
+    });
+
+    // Populate Cash Flow Regulation History Table
+    const cBody = document.getElementById("admin-cash-table-body");
+    cBody.innerHTML = "";
+    [...cashLedger].reverse().forEach(item => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${item.date}</td>
+            <td><span class="badge ${item.type === 'In' ? 'tag-Green' : 'tag-Red'}">Cash ${item.type}</span></td>
+            <td><strong>$${item.amount.toFixed(2)}</strong></td>
+            <td><span style="color:var(--text-secondary); font-size:0.8rem;">${item.note}</span></td>
+        `;
+        cBody.appendChild(tr);
+    });
+}
+
+function processDoctorOnboardingAction(e) {
+    e.preventDefault();
+    const name = document.getElementById("adm-doc-name").value.trim();
+    const spec = document.getElementById("adm-doc-specialty").value;
+    const pin = document.getElementById("adm-doc-pin").value.trim();
+
+    if (pin.length !== 4 || isNaN(pin)) {
+        alert("Starter passcodes must meet 4-digit numeric conditions.");
+        return;
+    }
+
+    const doctors = getDB("doctors");
+    let finalName = name.startsWith("Dr.") ? name : "Dr. " + name;
+
+    doctors.push({
+        id: `DOC-${101 + doctors.length}`,
+        name: finalName,
+        specialty: spec,
+        pin: pin,
+        status: "Active"
+    });
+    saveDB("doctors", doctors);
+
+    document.getElementById("admin-doc-onboard-form").reset();
+    alert(`Medical credentials activated for ${finalName}.`);
+    renderAdminDashboardLedgers();
+}
+
+function updateDoctorLifecycleStatus(docId, newStatus) {
+    if (!newStatus) return;
+    const doctors = getDB("doctors");
+    const idx = doctors.findIndex(d => d.id === docId);
+    
+    if (idx !== -1) {
+        if (newStatus === "Fired") {
+            if (confirm(`Warning: Purge directory file for ${doctors[idx].name}?`)) doctors.splice(idx, 1);
+        } else {
+            doctors[idx].status = newStatus;
+        }
+        saveDB("doctors", doctors);
+        renderAdminDashboardLedgers();
+    }
+}
+
+// ==========================================
+// CLINICAL PRACTITIONER PORTAL
+// ==========================================
+function renderPhysicianWorkspaceQueue() {
+    const doctors = getDB("doctors");
+    const patients = getDB("patients");
+
+    const activeDoc = doctors.find(d => d.id === currentAuthenticatedDoctorId);
+    if (!activeDoc) return;
+
+    document.getElementById("doc-ui-id").innerText = activeDoc.id;
+    document.getElementById("doc-ui-pin").innerText = activeDoc.pin;
+    document.getElementById("doc-portal-title").innerText = `${activeDoc.name} | Clinic Workspace`;
+
+    const personalWorkload = patients.filter(p => p.assignedConsultantId === activeDoc.id);
+    const activeWorkload = personalWorkload.filter(p => !p.discharged);
+    
+    const performanceIncentivePay = personalWorkload.length * 250.00;
+    document.getElementById("doc-ui-bonus").innerText = `$${performanceIncentivePay.toFixed(2)}`;
+    document.getElementById("doc-ui-total").innerText = `$${(8500.00 + performanceIncentivePay).toFixed(2)}`;
+
+    const tbody = document.getElementById("doc-queue-table-body");
+    tbody.innerHTML = "";
+
+    if (activeWorkload.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center" style="color:var(--text-secondary); padding: 30px;">No active files in your queue track matrix.</td></tr>`;
+        return;
+    }
+
+    activeWorkload.forEach(p => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td><span class="badge tag-${p.triageSeverityIndex}">${p.triageSeverityIndex}</span></td>
+            <td><code>${p.id}</code></td>
+            <td>
+                <strong>${p.name}</strong> <small>(${p.age} Y/O)</small><br>
+                <small style="color:var(--accent-blue); font-weight:600;">Room: ${p.allocatedRoom}</small>
+            </td>
+            <td>
+                <div class="clinical-orders-cell">
+                    <small>• ${p.clinicalInterventionsHistory.join("<br>• ")}</small>
+                </div>
+            </td>
+            <td><strong class="text-green">$${p.financialAccountBalance.toFixed(2)}</strong></td>
+            <td>
+                <div class="action-btn-cell">
+                    <button onclick="orderMedication('${p.id}')" class="btn-grid btn-rx">💊 Rx Package (+$350)</button>
+                    <button onclick="scheduleSurgery('${p.id}')" class="btn-grid btn-or">🩻 Apply OR Track (+$1,200)</button>
+                    <button onclick="dischargePatient('${p.id}')" class="btn-grid btn-disc">🔒 Discharge File & Settle</button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function orderMedication(pId) {
+    const rx = prompt("Enter specific clinical prescription parameters:");
+    if (!rx) return;
+    mutatePatientRecord(pId, r => {
+        r.clinicalInterventionsHistory.push(`Prescription Logged: ${rx}`);
+        r.financialAccountBalance += 350.00;
+    });
+}
+
+function scheduleSurgery(pId) {
+    const or = prompt("Specify surgical tracking parameters:");
+    if (!or) return;
+    mutatePatientRecord(pId, r => {
+        r.clinicalInterventionsHistory.push(`Surgical Event Scheduled: ${or}`);
+        r.financialAccountBalance += 1200.00;
+    });
+}
+
+function dischargePatient(pId) {
+    if (!confirm("Authorize discharge closure? Total ledger invoice value will instantly liquidate into realized facility gross revenue reserves.")) return;
+    mutatePatientRecord(pId, r => {
+        r.discharged = true;
+        r.clinicalInterventionsHistory.push("Clinical case closed. Account ledger balanced and liquidated.");
+    });
+}
+
+function mutatePatientRecord(pId, balanceMutationCallback) {
+    const patients = getDB("patients");
+    const idx = patients.findIndex(p => p.id === pId);
+    if (idx !== -1) {
+        balanceMutationCallback(patients[idx]);
+        saveDB("patients", patients);
+        renderPhysicianWorkspaceQueue();
+        refreshGlobalCapacityVisualizers();
+    }
+}
+
+// ==========================================
+// TACTICAL AMBULANCE SIMULATOR
+// ==========================================
+function triggerAmbulanceSummon() {
+    const zone = document.getElementById("amb-zone").value;
+    const logBox = document.getElementById("amb-status-log");
+    
+    logBox.classList.remove("hidden");
+    logBox.innerHTML = `<strong>⚠️ Connecting Grid...</strong> Mapping vectors...`;
+
+    setTimeout(() => {
+        logBox.innerHTML = `<strong>📡 Unit Dispatched:</strong> Fleet asset deployed to <strong>${zone}</strong>. Est ETA: 12 Minutes.`;
+    }, 1200);
+}

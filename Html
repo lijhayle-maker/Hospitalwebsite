@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>St. Mary Memorial Hospital | Command Center Hub</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- GLOBAL NAVIGATIONAL BAR LAYER (NO-PRINT) -->
+    <header class="hospital-navbar no-print">
+        <div class="nav-brand" onclick="switchView('home-view')">
+            <span class="nav-logo">🏥</span>
+            <div>
+                <h1>St. Mary Memorial Hospital</h1>
+                <p class="nav-subtitle">Integrated Clinical Infrastructure | Command Hub</p>
+            </div>
+        </div>
+        <div class="nav-actions">
+            <button onclick="switchView('home-view')" class="btn-nav">🏠 Public Intake</button>
+            <button onclick="openGateway('admin')" class="btn-nav btn-nav-admin">🛠️ Admin Control</button>
+            <button onclick="openGateway('doctor')" class="btn-nav btn-nav-doctor">🩺 Doctor Portal</button>
+        </div>
+    </header>
+
+    <!-- VIEW 1: PUBLIC INTAKE ENVIRONMENT (DEFAULT) -->
+    <section id="home-view" class="view no-print">
+        <div class="main-grid">
+            <div class="card card-glow">
+                <div class="card-header">
+                    <h3>Digital Clinical Intake Registry</h3>
+                    <p>Log patient metrics for database triage categorization and auto-routing algorithms.</p>
+                </div>
+                
+                <form id="advanced-intake-form">
+                    <div class="form-section-title">1. Patient Demographic Profile Details</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="pt-name">Patient Full Name</label>
+                            <input type="text" id="pt-name" required placeholder="e.g., Almaz Bekele">
+                        </div>
+                        <div class="form-group">
+                            <label for="pt-relation">Account Relationship Matrix</label>
+                            <select id="pt-relation">
+                                <option value="Self">Myself (Primary Policy Account Holder)</option>
+                                <option value="Child">My Child / Dependent Minor</option>
+                                <option value="Spouse">My Spouse / Legal Partner</option>
+                                <option value="Other">Other Family Member</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-grid-three">
+                        <div class="form-group">
+                            <label for="pt-age">Age (Years)</label>
+                            <input type="number" id="pt-age" required min="0" max="120" placeholder="Age">
+                        </div>
+                        <div class="form-group">
+                            <label for="pt-gender">Biological Sex</label>
+                            <select id="pt-gender" required>
+                                <option value="">Select Sex</option>
+                                <option value="Female">Female</option>
+                                <option value="Male">Male</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pt-phone">Emergency Contact Sub-City Line</label>
+                            <input type="tel" id="pt-phone" required placeholder="e.g., 0911XXXXXX">
+                        </div>
+                    </div>
+
+                    <div class="form-section-title">2. Clinical Presentation Triage Mapping Markers</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="pt-symptom">Primary Presenting Chief Complaint (AI Routed)</label>
+                            <select id="pt-symptom" required>
+                                <option value="">-- Select Valid Symptom Track --</option>
+                                <option value="Chest Pain">Severe Chest Pain / Palpitations</option>
+                                <option value="Fracture">Compound Bone Fracture / Joint Trauma</option>
+                                <option value="Acute Infection">High Spike Fever / Severe Migraine</option>
+                                <option value="Pediatric Illness">Infant Respiratory Distress / Childhood Illness</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pt-duration">Onset / Symptomatic History Duration</label>
+                            <select id="pt-duration" required>
+                                <option value="Acute (<3 Hours)">Acute Crisis State (<3 Hours)</option>
+                                <option value="Sub-Acute (12-24 Hours)">Sub-Acute Progression (12-24 Hours)</option>
+                                <option value="Chronic Escalation">Chronic Condition Escalation (>3 Days)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="pt-allergies">Declared Active Drug Allergies</label>
+                            <input type="text" id="pt-allergies" placeholder="e.g., Penicillin (Leave blank if NKDA)">
+                        </div>
+                        <div class="form-group">
+                            <label for="pt-chronic">Pre-Existing Chronic Comorbidities History</label>
+                            <select id="pt-chronic">
+                                <option value="None Declared">No Reported Chronic Past Comorbidities</option>
+                                <option value="Hypertension/Diabetes">Type-2 Diabetes / Hypertension History</option>
+                                <option value="Asthma/Respiratory">Chronic Active Asthma / Airway History</option>
+                                <option value="Multiple High Risk">Multiple Overlapping High-Risk Diagnoses</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="pt-bp">Baseline Vitals Signature Trend</label>
+                            <select id="pt-bp" required>
+                                <option value="Normotensive Normal">Normotensive Vitals (Stable Normal Range)</option>
+                                <option value="Elevated Reading">Elevated / Mild Tachycardia Borderline Reading</option>
+                                <option value="Hypertensive Emergency State">Critical Emergency Crisis State (Systolic >180 mmHg) 🚨</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pt-triage">Determined Clinical Urgency Priority Index</label>
+                            <select id="pt-triage" required class="highlighted-select">
+                                <option value="Green">🟢 Green Class Tag (Standard Routine Care)</option>
+                                <option value="Yellow">🟡 Yellow Class Tag (Urgent Care / Localized Pain)</option>
+                                <option value="Red">🔴 Red Class Tag (Immediate Life Threat Crisis)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-actions-row">
+                        <button type="submit" class="btn-submit-main">Secure & Compile Intake Record</button>
+                        <button type="button" onclick="clearIntakeForm()" class="btn-cancel-main">Clear</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="right-column">
+                <div class="card card-accent">
+                    <div class="card-header">
+                        <h3>Electronic Health File Query</h3>
+                        <p>Input unique patient token code (e.g., PT-1001) below to view active EMR chart logs.</p>
+                    </div>
+                    <div class="search-container">
+                        <input type="text" id="pt-search-input" placeholder="e.g., PT-1001">
+                        <button onclick="executePatientSearch()" class="btn-accent">Query File</button>
+                    </div>
+                    <p id="pt-search-error" class="error-text"></p>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Live Ward Occupancy Tracking Matrix</h3>
+                    </div>
+                    <div class="capacity-bar-container">
+                        <div class="capacity-labels">
+                            <span>Active Facility Bed Allocations</span>
+                            <span id="bed-count-label">0 / 50 Wards Full</span>
+                        </div>
+                        <div class="progress-track">
+                            <div id="bed-progress-fill" class="progress-fill"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ambulance-summon-card card">
+                    <div class="amb-header">
+                        <span class="amb-icon">🚨</span>
+                        <div>
+                            <h3>Emergency Fleet Dispatch</h3>
+                            <p>Instant tactical vehicle routing matrix across Addis Ababa sectors.</p>
+                        </div>
+                    </div>
+                    <div class="amb-dispatch-controls">
+                        <select id="amb-zone" style="flex:1;">
+                            <option value="Bole Sub-City Sector">Bole Sub-City Sector Layout</option>
+                            <option value="Kirkos Sub-City Sector">Kirkos Sub-City Sector Layout</option>
+                            <option value="Yeka Sub-City Sector">Yeka Sub-City Sector Layout</option>
+                        </select>
+                        <button onclick="triggerAmbulanceSummon()" class="btn-dispatch">Launch Unit</button>
+                    </div>
+                    <div id="amb-status-log" class="amb-status-log hidden"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- VIEW 2: CENTRAL INTERFACE GATEWAY AUTH -->
+    <section id="auth-view" class="view no-print hidden">
+        <div class="auth-card card">
+            <div class="auth-header">
+                <span id="auth-icon">🔒</span>
+                <h2 id="auth-title">System Gate Verification</h2>
+                <p id="auth-subtitle">Credential token entry required.</p>
+            </div>
+            <div id="auth-selector-block" class="form-group"></div>
+            <div class="form-group">
+                <label for="auth-pin">Security Passcode PIN</label>
+                <input type="password" id="auth-pin" placeholder="••••">
+            </div>
+            <div class="auth-actions">
+                <button onclick="validateGatewayCredentials()" class="btn-submit-main">Authenticate</button>
+                <button onclick="switchView('home-view')" class="btn-secondary">Cancel</button>
+            </div>
+            <p id="auth-global-error" class="error-text text-center"></p>
+        </div>
+    </section>
+
+    <!-- VIEW 3: INDIVIDUAL EMR HEALTH CHART PROFILE -->
+    <section id="patient-view" class="view hidden">
+        <div class="dashboard-control-bar no-print">
+            <h2>Patient Electronic Health Record File</h2>
+            <button onclick="switchView('home-view')" class="btn-secondary">Exit Chart</button>
+        </div>
+        <div id="patient-profile-data"></div>
+    </section>
+
+    <!-- VIEW 4: EXECUTIVE MANAGEMENT OPERATIONS SUITE -->
+    <section id="admin-view" class="view hidden">
+        <div class="dashboard-control-bar">
+            <div>
+                <h2>Hospital Executive Administration Suite</h2>
+                <p class="subtitle no-print">Global infrastructure capital balances and ledger tracking registries.</p>
+            </div>
+            <div class="action-row no-print">
+                <button onclick="window.print()" class="btn-accent">🖨️ Print Financial Audit Ledger</button>
+                <button onclick="switchView('home-view')" class="btn-secondary">Secure Logout</button>
+            </div>
+        </div>
+
+        <!-- Financial Banner Panel -->
+        <div class="financial-treasury-banner card">
+            <div class="treasury-header">
+                <h3>Global Facility Ledger & Capital Reserves Matrix</h3>
+                <span class="bank-icon">🏦</span>
+            </div>
+            <div class="treasury-metrics-grid">
+                <div class="t-box">
+                    <span class="t-lbl">Realized Gross Revenue</span>
+                    <h4 id="t-revenue" class="text-green">$0.00</h4>
+                    <small>* Aggregate revenue from discharged patient cases.</small>
+                </div>
+                <div class="t-box">
+                    <span class="t-lbl">Estimated Payroll Liabilities</span>
+                    <h4 id="t-payroll" class="text-orange">$0.00</h4>
+                    <small>* Combined running active doctor salaries due.</small>
+                </div>
+                <div class="t-box">
+                    <span class="t-lbl">Net Vault Reserves Balance</span>
+                    <h4 id="t-net-reserve">$0.00</h4>
+                    <button onclick="triggerPayrollPayout()" class="btn-payout-action">Disburse Live Assets</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-workspace-grid">
+            <!-- Left Side Operations Forms -->
+            <div class="left-admin-column" style="display:flex; flex-direction:column; gap:25px;">
+                <!-- Onboard Doctors Form -->
+                <div class="card no-print">
+                    <div class="card-header">
+                        <h3>Physician Recruitment Onboarding</h3>
+                    </div>
+                    <form id="admin-doc-onboard-form">
+                        <div class="form-group">
+                            <label for="adm-doc-name">Physician Full Name</label>
+                            <input type="text" id="adm-doc-name" required placeholder="Dr. Brook Assefa">
+                        </div>
+                        <div class="form-group">
+                            <label for="adm-doc-specialty">Assigned Specialty Division</label>
+                            <select id="adm-doc-specialty" required>
+                                <option value="Cardiology">Cardiology Department</option>
+                                <option value="Orthopedics">Orthopedics Department</option>
+                                <option value="General Medicine">General Internal Medicine</option>
+                                <option value="Pediatrics">Pediatrics Department</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="adm-doc-pin">Private Access PIN</label>
+                            <input type="password" id="adm-doc-pin" required placeholder="4-digit security code">
+                        </div>
+                        <button type="submit" class="btn-submit-main" style="margin-top:10px;">Deploy Staff Member</button>
+                    </form>
+                </div>
+
+                <!-- NEW: Dynamic Cash In/Out Regulation Tool -->
+                <div class="card dynamic-cash-card no-print">
+                    <div class="card-header">
+                        <h3>Regulate Liquid Funds (Cash In / Out)</h3>
+                        <p>Inject operational capital floating base reserves or deduct external facility costs manually.</p>
+                    </div>
+                    <form id="cash-regulation-form">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="cash-type">Transaction Vector</label>
+                                <select id="cash-type" required>
+                                    <option value="In">📥 Cash Flow Injection (Cash In)</option>
+                                    <option value="Out">📤 Expense Capital Withdrawal (Cash Out)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="cash-amount">Adjustment Amount ($)</label>
+                                <input type="number" id="cash-amount" step="0.01" required placeholder="e.g., 5000">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="cash-note">Auditable Purpose Description Note</label>
+                            <input type="text" id="cash-note" required placeholder="e.g., Purchasing emergency pharmacy supply stock">
+                        </div>
+                        <button type="submit" class="btn-submit-main" style="background-color:#059669;">Execute Transaction Token</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right side Data tables -->
+            <div class="right-admin-column" style="display:flex; flex-direction:column; gap:25px;">
+                <div class="card master-ledger-card">
+                    <div class="card-header">
+                        <h3>Active Staff Directory Lifecycle</h3>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID Code</th>
+                                <th>Doctor Signature Name</th>
+                                <th>Specialization</th>
+                                <th>Access PIN</th>
+                                <th>Status</th>
+                                <th class="no-print">Controls</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-docs-table-body"></tbody>
+                    </table>
+                </div>
+
+                <!-- Cash Flow Regulatory Audit Logs Table -->
+                <div class="card master-ledger-card">
+                    <div class="card-header">
+                        <h3>Regulated Cash Flow Tracking Log</h3>
+                    </div>
+                    <div style="max-height:220px; overflow-y:auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Vector type</th>
+                                    <th>Balance Mutation</th>
+                                    <th>Description Purpose context</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-cash-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card master-ledger-card" style="margin-top:35px;">
+            <div class="card-header">
+                <h3>Global Audit Trail: Patient Database Registries</h3>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID Key</th>
+                        <th>Patient Identity Name</th>
+                        <th>Clinical Details Info Matrix</th>
+                        <th>Triage Severity</th>
+                        <th>Department Vector</th>
+                        <th>Status Block</th>
+                        <th>Account Balance</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-patients-table-body"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- VIEW 5: PHYSICIAN PORTAL INTERACTION TERMINAL -->
+    <section id="doctor-view" class="view no-print hidden">
+        <div class="dashboard-control-bar">
+            <div>
+                <h2 id="doc-portal-title">Physician Workspace Terminal Console</h2>
+                <p class="subtitle">Clinical Logistics Operations Console</p>
+            </div>
+            <div class="action-row">
+                <button onclick="executeDoctorPINMutation()" class="btn-accent" style="background-color: #6b21a8;">🔒 Reset Security PIN</button>
+                <button onclick="switchView('home-view')" class="btn-secondary">Secure Logout</button>
+            </div>
+        </div>
+
+        <div class="doctor-portal-grid">
+            <div class="card financial-summary-panel">
+                <div class="card-header">
+                    <h3>Your Credentials & Payroll Statement</h3>
+                </div>
+                <div class="salary-line">
+                    <span class="s-label">Profile Credentials ID:</span>
+                    <span class="s-value" id="doc-ui-id">-</span>
+                </div>
+                <div class="salary-line">
+                    <span class="s-label">Active System Access PIN:</span>
+                    <span class="s-value" id="doc-ui-pin" style="color: var(--accent-blue); font-weight:700;">-</span>
+                </div>
+                <hr class="ui-divider">
+                <div class="salary-line">
+                    <span class="s-label">Base Guaranteed Retainer:</span>
+                    <span class="s-value">$8,500.00</span>
+                </div>
+                <div class="salary-line">
+                    <span class="s-label">Treatment Caseload Premium:</span>
+                    <span class="s-value text-green" id="doc-ui-bonus">$0.00</span>
+                </div>
+                <hr class="ui-divider">
+                <div class="salary-line total-line">
+                    <span class="s-label">Total Current Statement Pay:</span>
+                    <span class="s-value" id="doc-ui-total">$8,500.00</span>
+                </div>
+            </div>
+
+            <div class="card clinical-queue-panel">
+                <div class="card-header">
+                    <h3>Your Active Patient Queue & Treatment Logs</h3>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Triage</th>
+                            <th>File ID</th>
+                            <th>Identity & Room Mapping Coordinates</th>
+                            <th>Intervention Logs</th>
+                            <th>Accrued Balance</th>
+                            <th>Operations Row Controls Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="doc-queue-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <script src="app.js"></script>
+</body>
+</html>

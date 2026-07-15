@@ -1,0 +1,172 @@
+/* ==========================================================================
+   ST. MARY MEMORIAL HOSPITAL - MODERN GLASSMORPHIC MEDICAL UI BLUEPRINT
+   ========================================================================== */
+
+:root {
+    --primary-color: #0b1528;
+    --primary-light: #f1f7fc;
+    --accent-blue: #0284c7;
+    --accent-blue-light: #e0f2fe;
+    --border-clinical: #cbd5e1;
+    --bg-workspace: #f8fafc;
+    --bg-surface: rgba(255, 255, 255, 0.95);
+    --text-main: #1e293b;
+    --text-secondary: #475569;
+    
+    --triage-red: #ef4444;
+    --triage-yellow: #d97706;
+    --triage-green: #059669;
+}
+
+body {
+    background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+    color: var(--text-main);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0; padding: 0; min-height: 100vh;
+}
+
+.view { padding: 40px; box-sizing: border-box; }
+.hidden { display: none !important; }
+
+/* Interactive Top Navigation Infrastructure */
+.hospital-navbar {
+    background-color: var(--primary-color);
+    color: #ffffff; padding: 15px 40px;
+    display: flex; justify-content: space-between; align-items: center;
+    box-shadow: 0 4px 20px rgba(11,21,40,0.15);
+}
+.nav-brand { display: flex; align-items: center; gap: 15px; cursor: pointer; }
+.nav-logo { font-size: 2rem; }
+.nav-brand h1 { margin: 0; font-size: 1.35rem; font-weight: 800; }
+.nav-subtitle { margin: 1px 0 0 0; color: #94a3b8; font-size: 0.8rem; }
+.nav-actions { display: flex; gap: 12px; }
+
+.btn-nav { background-color: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #e2e8f0; padding: 10px 18px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.btn-nav:hover { background-color: rgba(255,255,255,0.15); color: white; transform: translateY(-1px); }
+
+/* Main Dashboard Structural Grid Layouts */
+.main-grid { display: grid; grid-template-columns: 1.25fr 0.75fr; gap: 35px; }
+.admin-workspace-grid { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 35px; }
+.doctor-portal-grid { display: grid; grid-template-columns: 0.7fr 1.3fr; gap: 35px; }
+.right-column { display: flex; flex-direction: column; gap: 35px; }
+
+/* Surface Panels Component Blocks */
+.card {
+    background-color: var(--bg-surface);
+    border: 1px solid #d8e2ef; border-radius: 12px; padding: 30px;
+    box-shadow: 0 10px 25px -5px rgba(148,163,184,0.1), 0 8px 10px -6px rgba(148,163,184,0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.card:hover { transform: translateY(-2px); box-shadow: 0 20px 30px -10px rgba(148,163,184,0.15); }
+.card-glow { border-top: 4px solid var(--accent-blue); }
+.card-accent { background: linear-gradient(180deg, #ffffff 0%, #f0f7ff 100%); border-left: 5px solid var(--accent-blue); }
+.card-header { margin-bottom: 25px; border-bottom: 1px solid #edf2f7; padding-bottom: 15px; }
+.card-header h3 { margin: 0; font-size: 1.25rem; color: var(--primary-color); font-weight: 800; }
+.card-header p { margin: 3px 0 0 0; font-size: 0.85rem; color: var(--text-secondary); }
+
+/* Form Control Interactivity Components */
+.form-section-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 800; color: var(--accent-blue); margin: 25px 0 15px 0; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px; }
+.form-group { margin-bottom: 18px; display: flex; flex-direction: column; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.form-grid-three { display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: 15px; }
+label { font-size: 0.8rem; font-weight: 700; color: #334155; margin-bottom: 6px; }
+input, select { width: 100%; padding: 12px 15px; background-color: white; border: 1px solid #cbd5e1; border-radius: 6px; color: var(--text-main); font-size: 0.9rem; box-sizing: border-box; transition: all 0.2s; }
+input:focus, select:focus { border-color: var(--accent-blue); outline: none; box-shadow: 0 0 0 3px rgba(2,132,199,0.15); }
+.highlighted-select { border: 1px solid var(--accent-blue); background-color: var(--primary-light); font-weight: 600; }
+
+.form-actions-row { display: flex; gap: 15px; margin-top: 25px; }
+.btn-submit-main { flex: 2; background-color: var(--primary-color); color: white; border: none; padding: 14px; border-radius: 6px; font-weight: 700; cursor: pointer; text-align: center; transition: background 0.2s; }
+.btn-submit-main:hover { background-color: #1e293b; }
+.btn-cancel-main { flex: 1; background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; padding: 14px; border-radius: 6px; font-weight: 700; cursor: pointer; text-align: center; }
+.btn-cancel-main:hover { background-color: #fca5a5; color: #7f1d1d; }
+
+.search-container { display: flex; gap: 10px; margin-top: 15px; }
+.search-container input { flex: 1; font-family: monospace; font-size: 1.1rem; text-transform: uppercase; }
+button.btn-accent { background-color: var(--accent-blue); color: white; border: none; padding: 12px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; }
+
+/* Capacity Analytics Bar Components */
+.capacity-bar-container { margin: 10px 0; }
+.capacity-labels { display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; margin-bottom: 8px; }
+.progress-track { height: 10px; background-color: #e2e8f0; border-radius: 10px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent-blue) 0%, #06b6d4 100%); width: 0%; transition: width 0.5s ease; }
+
+/* Ambulance Emergency Dock Widget */
+.ambulance-summon-card {
+    background: linear-gradient(135deg, #fff5f5 0%, #fff0f0 100%);
+    border: 1px solid #fecaca !important; border-left: 6px solid var(--triage-red) !important;
+    padding: 24px; margin-top: 10px;
+}
+.amb-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+.amb-icon { font-size: 2.2rem; }
+.amb-header h3 { margin: 0; color: #991b1b; font-size: 1.1rem; font-weight: 800; }
+.amb-header p { margin: 2px 0 0 0; color: #7f1d1d; font-size: 0.8rem; }
+.amb-dispatch-controls { display: flex; gap: 12px; align-items: center; }
+.btn-dispatch { background-color: var(--triage-red); color: white; border: none; font-weight: 700; padding: 12px 18px; border-radius: 6px; cursor: pointer; white-space: nowrap; }
+.amb-status-log { margin-top: 15px; padding: 12px; background-color: white; border: 1px solid #fee2e2; border-radius: 6px; font-size: 0.85rem; color: #7f1d1d; }
+
+/* Financial Treasury Track Panels style rules */
+.financial-treasury-banner { background-color: white; border-top: 5px solid #047857 !important; margin-bottom: 35px; }
+.treasury-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #edf2f7; padding-bottom: 12px; margin-bottom: 20px; }
+.treasury-header h3 { margin: 0; font-size: 1.15rem; color: #065f46; font-weight: 800; }
+.treasury-metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; }
+.t-box { background: #fafafa; padding: 15px 20px; border-radius: 8px; border: 1px solid #e2e8f0; }
+.t-lbl { font-size: 0.78rem; text-transform: uppercase; font-weight: 700; color: var(--text-secondary); display: block; }
+.t-box h4 { margin: 8px 0 4px 0; font-size: 1.6rem; font-weight: 800; }
+.t-box small { font-size: 0.72rem; color: #64748b; }
+.text-green { color: #047857; }
+.text-orange { color: #b45309; }
+.btn-payout-action { background-color: #047857; color: white; border: none; font-size: 0.78rem; padding: 8px 12px; border-radius: 4px; width: 100%; font-weight: 700; cursor: pointer; margin-top: 5px; transition: opacity 0.2s; }
+.btn-payout-action:hover { opacity: 0.9; }
+
+/* Unified Production Tables Layout */
+.data-table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 15px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
+.data-table th { background-color: #f1f5f9; color: var(--primary-color); font-weight: 700; text-transform: uppercase; font-size: 0.72rem; padding: 12px 16px; text-align: left; border-bottom: 2px solid #e2e8f0; }
+.data-table td { padding: 12px 16px; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; background-color: white; vertical-align: middle; }
+.data-table tr:hover td { background-color: var(--primary-light); }
+
+/* Custom System Badges & Life Cycle Indicators */
+.badge { display: inline-flex; padding: 3px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; border: 1px solid transparent; }
+.tag-Red { background-color: #fee2e2; color: var(--triage-red); border-color: #fca5a5; }
+.tag-Yellow { background-color: #fef3c7; color: var(--triage-yellow); border-color: #fcd34d; }
+.tag-Green { background-color: #d1fae5; color: var(--triage-green); border-color: #6ee7b7; }
+.file-tag-badge { background-color: var(--primary-color); color: white; font-size: 0.65rem; font-weight: 800; padding: 3px 8px; border-radius: 3px; }
+
+.status-indicator-tag { display: inline-block; padding: 4px 10px; font-size: 0.72rem; font-weight: 800; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+.status-active { background-color: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+.status-suspended { background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+
+.dashboard-control-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 35px; }
+.dashboard-control-bar h2 { margin: 0; font-size: 1.6rem; font-weight: 800; color: var(--primary-color); }
+.action-row { display: flex; gap: 12px; }
+
+.salary-line { display: flex; justify-content: space-between; padding: 10px 0; font-size: 0.88rem; }
+.total-line { font-size: 1.2rem; font-weight: 800; color: var(--accent-blue); border-top: 1px dashed #e2e8f0; padding-top: 12px; }
+.ui-divider { border: 0; border-top: 1px solid #e2e8f0; margin: 10px 0; }
+
+/* Interactive Physician Controls Row */
+.action-btn-cell { display: grid; grid-template-columns: 1fr; gap: 6px; width: 210px; }
+.btn-grid { padding: 8px; font-size: 0.72rem; font-weight: 700; border-radius: 4px; border: 1px solid transparent; cursor: pointer; text-align: left; }
+.btn-rx { background-color: #ecfdf5; color: var(--triage-green); border-color: #a7f3d0; }
+.btn-or { background-color: #fdf4ff; color: #a21caf; border-color: #f5d0fe; }
+.btn-disc { background-color: #fff5f5; color: var(--triage-red); border-color: #fed7d7; }
+.btn-grid:hover { filter: brightness(0.95); transform: translateY(-0.5px); }
+.clinical-orders-cell { max-width: 250px; font-family: monospace; font-size: 0.78rem; line-height: 1.4; color: var(--text-secondary); }
+
+/* Access Verification Security Screen Blocks */
+.auth-card { max-width: 440px; margin: 100px auto; }
+.auth-header { text-align: center; margin-bottom: 25px; }
+#auth-icon { font-size: 2.8rem; display: block; margin-bottom: 8px; }
+.auth-actions { display: grid; grid-template-columns: 2fr 1fr; gap: 15px; }
+.error-text { color: var(--triage-red); font-size: 0.82rem; font-weight: 700; margin-top: 6px; }
+.btn-secondary { background-color: white; border: 1px solid #cbd5e1; color: #475569; padding: 10px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; }
+.text-center { text-align: center; }
+.admin-pin-view-tag { background-color: #f1f5f9; color: #475569; padding: 4px 8px; border-radius: 4px; border: 1px dashed #cbd5e1; font-weight: 700; font-family: monospace; }
+
+@media print {
+    body { background: white !important; color: black; }
+    .view { padding: 0; }
+    .no-print { display: none !important; }
+    .card { border: none !important; box-shadow: none !important; padding: 0; margin-bottom: 25px; }
+    .data-table { border: 1px solid black !important; }
+    .data-table th { background-color: #f1f5f9 !important; border-bottom: 2px solid black !important; }
+}
